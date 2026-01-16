@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ace12thGRADE - Premium AI Board Notes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0a0c14;
+            color: #f8fafc;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1, h2, h3, button {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .note-content {
+            letter-spacing: -0.01em;
+            color: #1e293b;
+            line-height: 1.8;
+        }
+        .dark .note-content {
+            color: #f1f5f9;
+        }
+        
+        /* PDF/Print Optimization */
+        @media print {
+            .no-print { display: none !important; }
+            body { 
+                background: white !important; 
+                color: black !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .rounded-[5rem], .rounded-[4rem], .rounded-[3rem], .rounded-2xl, .rounded-3xl { 
+                border-radius: 0 !important; 
+                border: none !important;
+                box-shadow: none !important;
+            }
+            #root { padding: 0 !important; }
+            .note-container { 
+                box-shadow: none !important; 
+                border: none !important; 
+                padding: 15px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            h1, h2, h3, h4, p, span, div {
+                color: black !important;
+            }
+            .bg-slate-50, .bg-indigo-50, .bg-amber-50, .bg-rose-50 {
+                background-color: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+            h2, h3 { page-break-after: avoid; }
+            .section-card { page-break-inside: avoid; margin-bottom: 25px; }
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { 
+          background: #1e293b;
+          border-radius: 10px;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.36.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+</head>
+<body class="bg-[#0a0c14] text-white">
+    <div id="root"></div>
+</body>
+</html>
