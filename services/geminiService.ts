@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { ChapterNote, SubjectId, PremiumQuestion } from "../types";
 
@@ -74,16 +73,12 @@ const PREMIUM_SCHEMA = {
 
 const audioCache = new Map<string, AudioBuffer>();
 
-/**
- * Safely set localStorage item with Quota management
- */
 function safeLocalStorageSet(key: string, value: string) {
   try {
     localStorage.setItem(key, value);
   } catch (e) {
     if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-      console.warn("Storage quota exceeded. Clearing all image caches...");
-      // Aggressively clear all images to prioritize note storage
+      console.warn("Storage quota exceeded. Clearing non-essential data...");
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
@@ -92,32 +87,21 @@ function safeLocalStorageSet(key: string, value: string) {
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k));
-      
-      try {
-        localStorage.setItem(key, value);
-      } catch (retryError) {
-        // If still full, we must skip caching to prevent the app from freezing
-        console.error("Critical storage failure: skipping cache for", key);
-      }
+      try { localStorage.setItem(key, value); } catch (retryError) {}
     }
   }
 }
 
-/**
- * Robust retry mechanism
- */
 async function retryRequest<T>(fn: () => Promise<T>, retries = 5, delay = 1000): Promise<T> {
   const apiKey = process.env.API_KEY;
-  // Enhanced check for common CI/CD pitfalls
   if (!apiKey || apiKey === "" || apiKey === "undefined" || apiKey === "null") {
-    console.error("ACE12_API_ERROR: API_KEY is invalid or missing in Netlify Environment Variables.");
-    throw new Error("Missing API Configuration");
+    // This will be caught by the UI and shown as the error
+    throw new Error("API KEY MISSING: Please add API_KEY to Netlify Environment Variables.");
   }
   
   try {
     return await fn();
   } catch (error: any) {
-    console.error("Gemini Request Failed:", error);
     if (retries > 0 && (error.status === 429 || error.status === 503 || error.status === 500)) {
       await new Promise(resolve => setTimeout(resolve, delay));
       return retryRequest(fn, retries - 1, delay * 2);
@@ -134,6 +118,7 @@ const getCachedData = (key: string) => {
   return null;
 };
 
+// Fix: Use gemini-3-pro-preview for complex reasoning tasks and follow SDK guidelines for initialization
 export const generateChapterNotes = async (
   subjectId: SubjectId, 
   chapterTitle: string, 
@@ -148,14 +133,16 @@ export const generateChapterNotes = async (
   Include detailed theory, NCERT definitions, and 8 Board questions (2x1m, 2x2m, 2x3m, 2x5m).`;
 
   const result = await retryRequest(async () => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    // Fix: Using correct model for complex STEM reasoning and correct initialization
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-pro-preview",
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: NOTE_SCHEMA,
+        thinkingConfig: { thinkingBudget: 4096 }
       },
     });
     const parsed = JSON.parse(response.text || '{}');
@@ -167,6 +154,7 @@ export const generateChapterNotes = async (
   return result;
 };
 
+// Fix: Use gemini-3-pro-preview for complex reasoning tasks
 export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<PremiumQuestion[]> => {
   const cacheKey = `premium_vault_v16_${subjectId}`;
   const cached = getCachedData(cacheKey);
@@ -175,9 +163,10 @@ export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<Pr
   const prompt = `CBSE BOARD SOLVED ARCHIVE (2015-2025): Extract 50 high-yield questions for Class 12 ${subjectId}.`;
 
   const result = await retryRequest(async () => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    // Fix: Using correct model for complex reasoning and correct initialization
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-pro-preview",
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
@@ -186,6 +175,7 @@ export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<Pr
           type: Type.ARRAY,
           items: PREMIUM_SCHEMA.items
         },
+        thinkingConfig: { thinkingBudget: 4096 }
       },
     });
     const parsed = JSON.parse(response.text || '[]');
@@ -203,7 +193,8 @@ export const generateAestheticImage = async (prompt: string): Promise<string | n
 
   try {
     return await retryRequest(async () => {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // Fix: Follow initialization guidelines
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: { parts: [{ text: `${prompt}. Clean textbook illustration, white background, high-contrast, educational style.` }] },
@@ -255,7 +246,8 @@ export const generateSpeech = async (text: string, isSummary: boolean = false): 
   if (audioCache.has(hash)) return audioCache.get(hash)!;
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    // Fix: Follow initialization guidelines
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text.slice(0, 2500) }] }],
