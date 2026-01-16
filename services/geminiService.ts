@@ -82,22 +82,22 @@ function safeLocalStorageSet(key: string, value: string) {
     localStorage.setItem(key, value);
   } catch (e) {
     if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-      console.warn("Storage quota exceeded. Clearing image cache and retrying...");
-      // Clear specifically image-related cache keys to make space for core notes
+      console.warn("Storage quota exceeded. Clearing all image caches...");
+      // Aggressively clear all images to prioritize note storage
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith('img_v6_') || k.startsWith('img_v5_'))) {
+        if (k && (k.startsWith('img_') || k.includes('base64'))) {
           keysToRemove.push(k);
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k));
       
-      // Try setting again after clearing images
       try {
         localStorage.setItem(key, value);
       } catch (retryError) {
-        console.error("Failed to save even after clearing image cache:", key);
+        // If still full, we must skip caching to prevent the app from freezing
+        console.error("Critical storage failure: skipping cache for", key);
       }
     }
   }
@@ -108,15 +108,16 @@ function safeLocalStorageSet(key: string, value: string) {
  */
 async function retryRequest<T>(fn: () => Promise<T>, retries = 5, delay = 1000): Promise<T> {
   const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey === "" || apiKey === "undefined") {
-    console.error("CRITICAL ERROR: API_KEY is missing. Add it to your Netlify Environment Variables.");
+  // Enhanced check for common CI/CD pitfalls
+  if (!apiKey || apiKey === "" || apiKey === "undefined" || apiKey === "null") {
+    console.error("ACE12_API_ERROR: API_KEY is invalid or missing in Netlify Environment Variables.");
     throw new Error("Missing API Configuration");
   }
   
   try {
     return await fn();
   } catch (error: any) {
-    console.error("Gemini API Error Detail:", error);
+    console.error("Gemini Request Failed:", error);
     if (retries > 0 && (error.status === 429 || error.status === 503 || error.status === 500)) {
       await new Promise(resolve => setTimeout(resolve, delay));
       return retryRequest(fn, retries - 1, delay * 2);
