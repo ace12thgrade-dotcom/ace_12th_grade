@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react()],
   define: {
     // Injects the API key from environment variables into the built application
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
+    // Falls back to empty string to prevent build errors
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || '')
   },
   build: {
     outDir: 'dist',
