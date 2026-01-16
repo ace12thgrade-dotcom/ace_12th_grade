@@ -7,10 +7,6 @@
     <title>Ace12thGRADE - Premium AI Board Notes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        // Polyfill for process.env to prevent crashes in static environments
-        window.process = window.process || { env: {} };
-    </script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -80,18 +76,20 @@
 <script type="importmap">
 {
   "imports": {
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.36.0",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3"
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.1"
   }
 }
 </script>
 </head>
 <body class="bg-[#0a0c14] text-white">
     <div id="root"></div>
-    <!-- Entry point script -->
-    <script type="module" src="index.tsx"></script>
+    <!-- Pointing directly to index.tsx; Vite will handle the transpilation -->
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
